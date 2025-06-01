@@ -63,6 +63,7 @@ model User {
     accounts      Account[]
     sessions      Session[]
     posts         Post[]
+    tasks         Task[]
 }
 
 model VerificationToken {
@@ -71,4 +72,35 @@ model VerificationToken {
     expires    DateTime
 
     @@unique([identifier, token])
+}
+
+model Task {
+    id          String       @id @default(cuid())
+    title       String
+    description String?
+    status      TaskStatus   @default(TODO)
+    priority    TaskPriority @default(MEDIUM)
+    dueDate     DateTime?
+    createdAt   DateTime     @default(now())
+    updatedAt   DateTime     @updatedAt
+    
+    createdBy   User         @relation(fields: [createdById], references: [id])
+    createdById String
+    
+    @@index([status])
+    @@index([priority])
+    @@index([dueDate])
+    @@index([createdById])
+}
+
+enum TaskStatus {
+    TODO
+    IN_PROGRESS
+    DONE
+}
+
+enum TaskPriority {
+    LOW
+    MEDIUM
+    HIGH
 }
