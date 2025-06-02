@@ -96,7 +96,9 @@ const timingMiddleware = t.middleware(async ({ next, path }) => {
 	const result = await next();
 
 	const end = Date.now();
-	console.log(`[TRPC] ${path} took ${end - start}ms to execute`);
+	if (t._config.isDev) {
+		console.log(`[TRPC] ${path} took ${end - start}ms to execute`);
+	}
 
 	return result;
 });
@@ -120,7 +122,42 @@ export const publicProcedure = t.procedure.use(timingMiddleware);
  */
 export const protectedProcedure = t.procedure
 	.use(timingMiddleware)
-	.use(({ ctx, next }) => {
+	.use(async ({ ctx, next }) => {
+		// E2E Test mode: bypass authentication
+		const isE2ETestMode = process.env.E2E_TEST_MODE === "true";
+
+		if (isE2ETestMode) {
+			// Create a mock user session for e2e tests
+			const mockUserId = "e2e-test-user";
+
+			// Check if the user exists in the database, create if not
+			let user = await ctx.db.user.findUnique({
+				where: { id: mockUserId },
+			});
+
+			if (!user) {
+				user = await ctx.db.user.create({
+					data: {
+						id: mockUserId,
+						name: "E2E Test User",
+						email: "e2e@example.com",
+					},
+				});
+			}
+
+			const mockSession = {
+				user: user,
+				expires: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // 24 hours from now
+			};
+			return next({
+				ctx: {
+					...ctx,
+					session: mockSession,
+				},
+			});
+		}
+
+		// Normal authentication check
 		if (!ctx.session?.user) {
 			throw new TRPCError({ code: "UNAUTHORIZED" });
 		}
