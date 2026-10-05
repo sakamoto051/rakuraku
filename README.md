@@ -1,253 +1,50 @@
-# Rakuraku - らくらくタスク管理
+# Rakuraku
+日々の作業を整理するタスク管理アプリです。タスクの作成・編集・削除から、期限・優先度・進捗の確認までを Next.js と型付き API で実装しています。
 
-<div align="center">
-  <h1>🚀 Rakuraku Task Management</h1>
-  <p>効率的なタスク管理で日々の作業をもっと楽に</p>
-  
-  <img src="https://img.shields.io/badge/Next.js-15-black" alt="Next.js">
-  <img src="https://img.shields.io/badge/React-19-blue" alt="React">
-  <img src="https://img.shields.io/badge/TypeScript-5.8-blue" alt="TypeScript">
-  <img src="https://img.shields.io/badge/Prisma-6.5-green" alt="Prisma">
-  <img src="https://img.shields.io/badge/tRPC-11-red" alt="tRPC">
-  <img src="https://img.shields.io/badge/Tailwind-4-blue" alt="Tailwind CSS">
-</div>
+## 主な機能
+- タスクの CRUD、完了状態の切り替え
+- タイトル・説明の検索、状態・優先度による絞り込みと並べ替え
+- 期限、期限切れ件数、完了率などの統計表示
+- Google 認証とユーザー単位のデータ取得・更新
 
-## 📋 概要
+## 技術と構成
+Next.js 15 / React 19 / TypeScript / tRPC 11 / Prisma 6 / PostgreSQL / Auth.js (NextAuth v5 beta) / Tailwind CSS 4 / Playwright / Biome。
+- [src/app/_components/tasks](src/app/_components/tasks): タスク画面とフォーム
+- [src/server/api/routers/task.ts](src/server/api/routers/task.ts): 入力検証・所有者確認・CRUD・集計
+- [prisma/schema.prisma](prisma/schema.prisma): データモデル
+- [src/server/auth/config.ts](src/server/auth/config.ts): Google 認証と開発用 E2E 認証
+- [tests/e2e](tests/e2e): CRUD、フィルター、認証などのテスト
 
-Rakurakuは、直感的なインターフェースと強力な機能を組み合わせたモダンなタスク管理アプリケーションです。T3スタックをベースに構築され、効率的なタスク管理で日々の作業をもっと楽にします。
+## 実装上のポイント
+tRPC と Zod を用いて UI と API の型をつなぎ、サーバー側ではセッションのユーザーIDで対象データを絞り込みます。フォーム、一覧、フィルター、統計をコンポーネントとして分けています。
 
-## ✨ 主要機能
-
-- ✅ **直感的なタスク管理**: 簡単なタスクの作成、編集、削除
-- 🔍 **高度な検索・フィルター**: タイトル、説明文での検索や状態・優先度でのフィルタリング
-- 📊 **統計ダッシュボード**: タスクの完了率、期限切れタスクなどを可視化
-- 🏷️ **優先度管理**: 高・中・低の3段階で優先度を設定
-- 📅 **期限管理**: 期限設定と期限切れアラート
-- 🔐 **セキュアな認証**: NextAuth.jsによる安全なユーザー認証
-- 📱 **レスポンシブデザイン**: デスクトップ、タブレット、モバイル対応
-- 🌙 **モダンUI**: TailwindCSSによる美しいデザイン
-
-## 🛠️ 技術スタック
-
-### フロントエンド
-- **Next.js 15**: React フレームワーク、App Router
-- **React 19**: ユーザーインターフェース
-- **TypeScript**: 型安全性
-- **Tailwind CSS 4**: スタイリング
-- **Hero Icons**: アイコンライブラリ
-- **React Hook Form**: フォーム管理
-- **date-fns**: 日付処理
-
-### バックエンド
-- **tRPC 11**: 型安全なAPI
-- **Prisma 6**: ORM・データベース
-- **PostgreSQL**: メインデータベース
-- **NextAuth.js**: 認証システム
-- **Zod**: スキーマバリデーション
-
-### 開発・テスト
-- **Playwright**: E2Eテスト
-- **Biome**: コード品質管理
-- **ESLint**: 静的解析
-
-## 🚀 クイックスタート
-
-### 前提条件
-
-- Node.js 18.x以上
-- npm または yarn
-- PostgreSQL データベース
-
-### インストール
-
-1. **リポジトリをクローン**
-   ```bash
-   git clone https://github.com/sakamoto051/rakuraku.git
-   cd rakuraku
-   ```
-
-2. **依存関係をインストール**
-   ```bash
-   npm install
-   ```
-
-3. **環境変数を設定**
-   ```bash
-   cp .env.example .env.local
-   ```
-   
-   `.env.local`ファイルを編集して、以下の変数を設定：
-   ```env
-   # Database
-   DATABASE_URL="postgresql://user:password@localhost:5432/rakuraku"
-   
-   # NextAuth
-   NEXTAUTH_SECRET="your-secret-key"
-   NEXTAUTH_URL="http://localhost:3000"
-   
-   # Auth Providers (例: GitHub)
-   GITHUB_CLIENT_ID="your-github-client-id"
-   GITHUB_CLIENT_SECRET="your-github-client-secret"
-   ```
-
-4. **データベースをセットアップ**
-   ```bash
-   npm run db:push
-   ```
-
-5. **開発サーバーを起動**
-   ```bash
-   npm run dev
-   ```
-
-6. **ブラウザでアクセス**
-   
-   [http://localhost:3000](http://localhost:3000) を開く
-
-## 📁 プロジェクト構造
-
-```
-src/
-├── app/                    # Next.js App Router
-│   ├── _components/        # 共有コンポーネント
-│   │   ├── navigation/     # ナビゲーション関連
-│   │   └── tasks/          # タスク関連コンポーネント
-│   ├── tasks/              # タスク管理ページ
-│   └── api/                # API Routes
-├── server/                 # サーバーサイドコード
-│   ├── api/                # tRPC ルーター
-│   ├── auth/               # 認証設定
-│   └── db/                 # データベース設定
-├── trpc/                   # tRPC クライアント設定
-└── styles/                 # スタイルファイル
-
-tests/
-├── e2e/                    # E2Eテスト
-├── fixtures/               # テストデータ
-└── utils/                  # テストユーティリティ
-```
-
-## 🔧 開発
-
-### 利用可能なスクリプト
-
-```bash
-# 開発サーバー起動
+## ローカル起動
+Node.js・npm と PostgreSQL、Google OAuth の開発用設定が必要です。
+```sh
+cp .env.example .env
+# .env にローカルDB、AUTH_SECRET、AUTH_GOOGLE_ID / AUTH_GOOGLE_SECRET を設定
+npm ci
+npm run db:push
 npm run dev
+```
+`http://localhost:3000` にアクセスします。`db:push` はスキーマを変更するため、専用の開発DBで実行してください。
 
-# 本番ビルド
-npm run build
-
-# 型チェック
+## 検証
+```sh
 npm run typecheck
-
-# コード品質チェック
 npm run check
-
-# データベース操作
-npm run db:push          # スキーマをデータベースに適用
-npm run db:studio        # Prisma Studio（GUI）を起動
-
-# テスト実行
-npm run test:e2e         # E2Eテスト実行
-npm run test:e2e:ui      # PlaywrightのUIモードでテスト
-npm run test:e2e:debug   # デバッグモードでテスト
-```
-
-### 開発ガイドライン
-
-1. **ブランチ戦略**: feature/issue-番号-簡単な説明
-2. **コミットメッセージ**: 具体的で理解しやすいメッセージを書く
-3. **型安全性**: TypeScriptを活用し、any型は極力避ける
-4. **テスト**: 新機能追加時はE2Eテストも更新する
-
-## 📖 ドキュメント
-
-詳細なドキュメントは、プロジェクトの開発ノート（Obsidian）で管理されています。開発者向けの情報は以下の通りです：
-
-### 🚀 クイックリファレンス
-- **セットアップ**: 上記のクイックスタートガイドを参照
-- **API仕様**: tRPCによる型安全なAPI（`src/server/api/`参照）
-- **コンポーネント**: `src/app/_components/`配下の各コンポーネント
-- **データベース**: Prismaスキーマ（`prisma/schema.prisma`参照）
-
-### 💬 サポート・質問
-詳細な使用方法や開発ガイドについては、以下からお問い合わせください：
-- [GitHub Issues](https://github.com/sakamoto051/rakuraku/issues) - 技術的な質問・バグ報告
-- [GitHub Discussions](https://github.com/sakamoto051/rakuraku/discussions) - 一般的な議論・アイデア
-
-## 🧪 テスト
-
-### E2Eテスト
-
-Playwrightを使用してエンドツーエンドテストを行っています。
-
-```bash
-# 全てのE2Eテストを実行
-npm run test:e2e
-
-# 特定のテストファイルを実行
-npx playwright test auth.spec.ts
-
-# UIモードでテスト実行（視覚的デバッグ）
-npm run test:e2e:ui
-
-# テストレポート表示
-npm run test:e2e:report
-```
-
-テストカバレッジ：
-- ✅ 認証フロー
-- ✅ タスクCRUD操作
-- ✅ フィルター・検索機能
-- ✅ レスポンシブデザイン
-
-## 🚀 デプロイ
-
-### Vercel（推奨）
-
-1. [Vercel](https://vercel.com)でアカウント作成
-2. GitHubリポジトリを連携
-3. 環境変数を設定
-4. デプロイ
-
-### 手動デプロイ
-
-```bash
-# 本番ビルド
 npm run build
-
-# 本番サーバー起動
-npm start
+npm run test:e2e
 ```
+E2E認証の回帰テストは Node.js 22.18 以上で `node --test tests/security/e2e-mode.test.mjs` を実行できます。
 
-## 🤝 コントリビューション
+E2E は専用テストDBと Playwright のブラウザが必要です。テスト用スクリプトはデータ変更を行うため、本番の接続情報を渡さないでください。
 
-1. このリポジトリをフォーク
-2. フィーチャーブランチを作成 (`git checkout -b feature/amazing-feature`)
-3. 変更をコミット (`git commit -m 'Add some amazing feature'`)
-4. ブランチにプッシュ (`git push origin feature/amazing-feature`)
-5. プルリクエストを作成
+## 設定・セキュリティ
+- 環境変数は [src/env.js](src/env.js) に合わせ、Google 用の実装とサンプルを統一しています。秘密を含む .env は追跡しません。
+- E2E 用認証はサーバー側の E2E_TEST_MODE=true かつ非 production の場合だけ有効です。リクエストヘッダーで有効化できません。
+- ローカル試験用の接続例は本番資格情報ではありません。共用・公開DBで再利用しないでください。
+- 生成済みテストレポートは追跡しません。削除前のファイルは Git 履歴に残ります。
 
-## 📝 ライセンス
-
-このプロジェクトは [MIT License](./LICENSE) の下でライセンスされています。
-
-## 🙏 謝辞
-
-- [T3 Stack](https://create.t3.gg/) - 優れた開発基盤
-- [Theo](https://www.youtube.com/@t3dotgg) - T3スタックの作成者
-- オープンソースコミュニティ - 素晴らしいツールとライブラリの提供
-
-## 📞 サポート
-
-何か問題や質問がありましたら、以下の方法でお気軽にお問い合わせください：
-
-- [Issues](https://github.com/sakamoto051/rakuraku/issues) - バグ報告や機能要望
-- [Discussions](https://github.com/sakamoto051/rakuraku/discussions) - 質問や意見交換
-
----
-
-<div align="center">
-  Made with ❤️ by <a href="https://github.com/sakamoto051">sakamoto051</a>
-</div>
+## 現状の制約
+Auth.js は beta 版を使用しています。大規模データ向けのページングや運用監視、実環境での総合検証は別途必要です。テストファイルの存在と、全テストの合格は区別してください。既存 README が参照していた LICENSE ファイルはリポジトリに存在せず、この整理で新しい利用許諾は付与していません。

@@ -7,6 +7,9 @@ import GoogleProvider from "next-auth/providers/google";
 
 import { env } from "~/env";
 import { db } from "~/server/db";
+import { isE2ETestMode } from "./e2e-mode";
+
+const isE2EMode = isE2ETestMode(process.env);
 
 /**
  * Module augmentation for `next-auth` types. Allows us to add custom properties to the `session`
@@ -37,11 +40,8 @@ const E2ETestProvider = CredentialsProvider({
 		email: { label: "Email", type: "email" },
 		name: { label: "Name", type: "text" },
 	},
-	async authorize(credentials, req) {
-		// E2Eテストモードでのみ有効（環境変数またはヘッダーをチェック）
-		const isE2EMode =
-			process.env.E2E_TEST_MODE === "true" ||
-			req?.headers?.get?.("x-e2e-test") === "true";
+	async authorize(credentials) {
+		// サーバー側で明示した非本番のテスト環境だけを許可する。
 
 		if (!isE2EMode) {
 			return null;
@@ -72,8 +72,8 @@ const E2ETestProvider = CredentialsProvider({
  */
 export const authConfig = {
 	providers: [
-		// E2Eテストプロバイダーを常に含める（authorize内でチェック）
-		E2ETestProvider,
+		// 非本番のテスト環境にのみプロバイダーを登録する。
+		...(isE2EMode ? [E2ETestProvider] : []),
 		// DiscordProvider,
 		GoogleProvider({
 			clientId: env.AUTH_GOOGLE_ID,
@@ -89,10 +89,10 @@ export const authConfig = {
 		 * @see https://next-auth.js.org/providers/github
 		 */
 	],
-	adapter: process.env.E2E_TEST_MODE === "true" ? undefined : PrismaAdapter(db),
+	adapter: isE2EMode ? undefined : PrismaAdapter(db),
 	callbacks: {
 		session: ({ session, user, token }) => {
-			if (process.env.E2E_TEST_MODE === "true" && token) {
+			if (isE2EMode && token) {
 				// E2Eテストモードでは、tokenから情報を取得
 				return {
 					...session,

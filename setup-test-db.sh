@@ -40,7 +40,7 @@ echo "Setting up Prisma schema for test database..."
 E2E_TEST_MODE=true DATABASE_URL_E2E="$DATABASE_URL_E2E" npx prisma db push --accept-data-loss
 
 echo "✅ E2E test database setup complete!"
-echo "Test database URL: $DATABASE_URL_E2E"
+echo "Test database connection configured (credentials omitted)."
 echo ""
 echo "You can now run E2E tests with:"
 echo "  npm run test:e2e"
