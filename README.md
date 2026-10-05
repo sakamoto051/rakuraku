@@ -15,6 +15,22 @@ Next.js 15 / React 19 / TypeScript / tRPC 11 / Prisma 6 / PostgreSQL / Auth.js (
 - [src/server/auth/config.ts](src/server/auth/config.ts): Google 認証と開発用 E2E 認証
 - [tests/e2e](tests/e2e): CRUD、フィルター、認証などのテスト
 
+## システムアーキテクチャ
+
+```mermaid
+flowchart LR
+  UI["ブラウザ / タスク一覧・フォーム"] -->|"取得・CRUD・集計"| API["Next.js / tRPC task router"]
+  API -->|"セッション参照"| Auth["Auth.js"]
+  Auth <-->|"OAuthログイン"| Google["Google"]
+  API <-->|"Prisma / ユーザー単位のデータ操作"| DB[("PostgreSQL")]
+  Auth <-->|"Prisma Adapter / ユーザー・認証情報"| DB
+```
+
+- 画面からの操作は [TaskList](src/app/_components/tasks/TaskList.tsx) と [task router](src/server/api/routers/task.ts) に対応します。
+- [tRPCのコンテキスト・protectedProcedure](src/server/api/trpc.ts) がセッションを扱い、[認証設定](src/server/auth/config.ts) が Google と Prisma Adapter を接続します。
+- データ保存は [Prisma Client](src/server/db.ts) と [schema](prisma/schema.prisma) に従います。常駐workerや外部ジョブキューはありません。
+- 図は通常の認証経路です。E2E専用DB・モック認証は非本番のテスト環境だけの別経路です。
+
 ## 実装上のポイント
 tRPC と Zod を用いて UI と API の型をつなぎ、サーバー側ではセッションのユーザーIDで対象データを絞り込みます。フォーム、一覧、フィルター、統計をコンポーネントとして分けています。
 
